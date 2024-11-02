@@ -19,12 +19,13 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 
 // Set up a job queue
 const codeGenerationQueue = new Queue('code generation', {
-  // redis: {
-  //   host: process.env.REDIS_HOST,
-  //   port: process.env.REDIS_PORT,
-  //   password: process.env.REDIS_PASSWORD,
-  //   tls: {} // Required by Upstash
-  // }
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost', // Default to 'localhost' for local Docker
+    port: process.env.REDIS_PORT || 6379,       // Default Redis port is 6379
+    password: process.env.REDIS_PASSWORD || '',  // No password required by default in Docker
+    tls: process.env.REDIS_TLS === 'true' ? {} : undefined // No TLS for local Docker setup
+  }
+
 });
 
 // Job processor
@@ -46,7 +47,6 @@ codeGenerationQueue.process(async (job) => {
     archive.file(filePath, { name: path.basename(filePath) });
     archive.directory(path.dirname(outputFileName), false);
     await archive.finalize();
-    await new Promise((resolve, reject) => setTimeout(resolve, 10000));
 
     console.log(`Job completed: ${job.id}`);
     return zipFilePath;
