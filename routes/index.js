@@ -74,19 +74,24 @@ router.get('/', function (req, res, next) {
 
 
 router.post('/generate-code', upload.single('schema'), async (req, res, next) => {
-  if (!req.file) {
-    return res.status(400).send('No file uploaded.');
+  try {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded.');
+    }
+
+    // Add a job to the queue
+    const job = await codeGenerationQueue.add({
+      filePath: req.file.path,
+      outputFileName: path.join('tmp', req.file.filename)
+    });
+
+    // Respond immediately with job details or an identifier
+    // res.status(202).json({ message: 'Job is being processed', jobId: job.id });
+    res.render('/', { title: 'Express', jobId: job.id });
+  } catch (error) {
+    console.log(error);
+    res.render('/', { title: 'Express', error: error.message });
   }
-
-  // Add a job to the queue
-  const job = await codeGenerationQueue.add({
-    filePath: req.file.path,
-    outputFileName: path.join('tmp', req.file.filename)
-  });
-
-  // Respond immediately with job details or an identifier
-  // res.status(202).json({ message: 'Job is being processed', jobId: job.id });
-  res.render('/', { title: 'Express', jobId: job.id });
 });
 
 // Route to download the zip file by job ID
