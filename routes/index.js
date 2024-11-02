@@ -84,7 +84,7 @@ router.get('/', function (req, res, next) {
 });
 
 
-router.post('/generate-code', upload.single('schema'), async (req, res, next) => {
+router.post('/', upload.single('schema'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).send('No file uploaded.');
