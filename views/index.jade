@@ -1,0 +1,160 @@
+doctype html
+html
+    head
+        title Generate Code from Prisma Schema
+        link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css')
+        link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css')
+        style.
+            body {
+                background-color: #f4f6f9;
+                font-family: 'Arial', sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                overflow: hidden;
+            }
+            .container {
+                max-width: 750px;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                background: #fff;
+                text-align: center;
+            }
+            h1 {
+                font-size: 1.8rem;
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+                color: #007bff;
+            }
+            p {
+                font-size: 0.95rem;
+                color: #555;
+                margin-bottom: 1rem;
+            }
+            .feature-list, .instructions-list {
+                padding: 0;
+                list-style: none;
+                margin: 0 auto 1rem;
+                display: flex;
+                justify-content: space-around;
+                flex-wrap: wrap;
+            }
+            .feature-list li, .instructions-list li {
+                margin: 5px;
+                font-size: 0.9rem;
+                color: #333;
+                display: flex;
+                align-items: center;
+            }
+            .feature-list li i, .instructions-list li i {
+                margin-right: 5px;
+                color: #007bff;
+            }
+            .btn-primary {
+                background-color: #007bff;
+                border: none;
+                font-size: 1rem;
+                padding: 10px 20px;
+                border-radius: 5px;
+                transition: background-color 0.3s ease;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+            .btn-contribute {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                font-size: 0.8rem;
+                padding: 6px 12px;
+                border-radius: 5px;
+                transition: background-color 0.3s ease;
+                margin-left: 10px;
+            }
+            .btn-contribute:hover {
+                background-color: #218838;
+            }
+            .alert {
+                border-radius: 5px;
+                margin-top: 15px;
+            }
+            .checklist-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+            .checklist-item input[type="checkbox"] {
+                margin-right: 10px;
+            }
+            .contribute-section {
+                margin-top: 20px;
+                padding-top: 10px;
+                border-top: 1px solid #ddd;
+            }
+            
+
+    body
+        .container
+            // Project Title and Detailed Description
+            h1 Generate Code from Prisma Schema
+            p This tool automates backend code generation by converting your Prisma schema into well-structured code. It simplifies CRUD operation setup, validation, and routing, making development faster and easier. The generated code is clean, efficient, and ready to integrate into your project.
+
+            // Features List
+            ul.feature-list
+                li <i class="fas fa-bolt"></i> Automated CRUD
+                li <i class="fas fa-check-circle"></i> Validation & Routing
+                li <i class="fas fa-download"></i> Downloadable ZIP
+                li <i class="fas fa-tools"></i> Easy Integration
+
+            // Usage Instructions List
+            ul.instructions-list
+                li <i class="fas fa-file-upload"></i> Upload .prisma file
+                li <i class="fas fa-sync-alt"></i> Generate Code
+                li <i class="fas fa-file-archive"></i> Download ZIP
+
+            // Form for Uploading Schema
+            form(action='/generate-code', method='POST', enctype='multipart/form-data')
+                .form-group
+                    input#schema.form-control(type='file', name='schema', required, placeholder='Choose a .prisma file')
+                button.btn.btn-primary.btn-block.mt-2(type='submit') <i class="fas fa-upload"></i> Upload
+
+            if jobId
+                .mt-3
+                    h5 Job Status
+                    p.text-muted Your code is being generated. Download when ready:
+                    a(href=`/download/${jobId}`, class='btn btn-success btn-block') Download ZIP
+
+            if error
+                .alert.alert-danger.mt-3
+                    strong Error:
+                    p.mb-0= error
+
+            // Contribution Button
+            //a.btn-contribute(href='https://github.com/your-repo', target='_blank') <i class="fas fa-code-branch"></i> Contribute on GitHub
+
+            // Future Feature Checklist with Individual Contribution Buttons
+            .contribute-section
+                h5.mt-4 Feature Wishlist
+                ul.checklist
+                    li.checklist-item
+                        label 
+                            input(type='checkbox', disabled)
+                            |  Authorized Routes
+                        a.btn-contribute(href='https://github.com/your-repo/authorized-routes', target='_blank') <i class="fas fa-code-branch"></i> Contribute
+
+                    li.checklist-item
+                        label 
+                            input(type='checkbox', disabled)
+                            |  API Documentation
+                        a.btn-contribute(href='https://github.com/your-repo/api-documentation', target='_blank') <i class="fas fa-code-branch"></i> Contribute
+
+                    li.checklist-item
+                        label 
+                            input(type='checkbox', disabled)
+                            |  Client Code Generation for API Repositories
+                        a.btn-contribute(href='https://github.com/your-repo/client-code-generation', target='_blank') <i class="fas fa-code-branch"></i> Contribute
