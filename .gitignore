@@ -131,3 +131,4 @@ dist
 tmp/*
 uploads/*
 package-lock.json
+.vercel
