@@ -51,6 +51,11 @@ export function usePrismaGenerator() {
 
             const defaultConfig: Record<string, ModelConfig> = {}
             data.models.forEach((model: SchemaModel) => {
+                // Get all string fields for default searchable configuration
+                const stringFields = model.fields
+                    .filter(field => field.type === 'String')
+                    .map(field => field.name)
+
                 defaultConfig[model.name] = {
                     enableCreate: true,
                     enableUpdate: true,
@@ -64,7 +69,7 @@ export function usePrismaGenerator() {
                     searchConfig: {
                         enabled: true,
                         includeRelationSearch: true,
-                        searchableFields: [],
+                        searchableFields: stringFields, // Default all string fields as searchable
                         excludedFields: [],
                     },
                     relationConfig: {

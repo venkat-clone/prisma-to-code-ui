@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Button } from "@/components/ui/button"
+import { Search, CheckSquare, Square } from "lucide-react"
 
 interface Field {
   name: string
@@ -48,10 +50,25 @@ interface ModelConfigCardProps {
 export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCardProps) {
   const [mode, setMode] = useState<"ui" | "json">("ui")
   const [draft, setDraft] = useState<string>(JSON.stringify(config, null, 2))
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     setDraft(JSON.stringify(config, null, 2))
   }, [config])
+
+  // Get string fields for searchable configuration
+  const stringFields = model.fields.filter(f => f.type === 'String')
+  const relationFields = model.fields.filter(f => 
+    (!['String', 'Int', 'Float', 'Boolean', 'DateTime'].includes(f.type)) || 
+    f.type.includes('[]') || 
+    f.type.includes('?')
+  )
+
+  // Filter fields based on search term
+  const filteredFields = model.fields.filter(field =>
+    field.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    field.type.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const updateFieldConfig = (
     field: string,
@@ -97,6 +114,123 @@ export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCa
         includeFields: Array.from(includeSet),
         excludeFields: Array.from(excludeSet),
         childFields: Array.from(childSet),
+      },
+    })
+  }
+
+  // Select all functions
+  const selectAllSearchable = () => {
+    const searchables = new Set(config.searchConfig.searchableFields)
+    stringFields.forEach(field => searchables.add(field.name))
+    onConfigChange({
+      ...config,
+      searchConfig: {
+        ...config.searchConfig,
+        searchableFields: Array.from(searchables),
+      },
+    })
+  }
+
+  const deselectAllSearchable = () => {
+    onConfigChange({
+      ...config,
+      searchConfig: {
+        ...config.searchConfig,
+        searchableFields: [],
+      },
+    })
+  }
+
+  const selectAllInclude = () => {
+    const includeSet = new Set(config.relationConfig.includeFields)
+    relationFields.forEach(field => includeSet.add(field.name))
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        includeFields: Array.from(includeSet),
+      },
+    })
+  }
+
+  const deselectAllInclude = () => {
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        includeFields: [],
+      },
+    })
+  }
+
+  const selectAllChild = () => {
+    const childSet = new Set(config.relationConfig.childFields)
+    relationFields.forEach(field => childSet.add(field.name))
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        childFields: Array.from(childSet),
+      },
+    })
+  }
+
+  const deselectAllChild = () => {
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        childFields: [],
+      },
+    })
+  }
+
+  const selectAllExclude = () => {
+    const excludeSet = new Set(config.relationConfig.excludeFields)
+    relationFields.forEach(field => excludeSet.add(field.name))
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        excludeFields: Array.from(excludeSet),
+      },
+    })
+  }
+
+  const deselectAllExclude = () => {
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        excludeFields: [],
+      },
+    })
+  }
+
+  const selectIncludeAndChild = () => {
+    const includeSet = new Set(config.relationConfig.includeFields)
+    const childSet = new Set(config.relationConfig.childFields)
+    relationFields.forEach(field => {
+      includeSet.add(field.name)
+      childSet.add(field.name)
+    })
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        includeFields: Array.from(includeSet),
+        childFields: Array.from(childSet),
+      },
+    })
+  }
+
+  const deselectIncludeAndChild = () => {
+    onConfigChange({
+      ...config,
+      relationConfig: {
+        ...config.relationConfig,
+        includeFields: [],
+        childFields: [],
       },
     })
   }
@@ -148,6 +282,17 @@ export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCa
 
           {mode === "ui" ? (
             <div className="space-y-3">
+              {/* Search Field */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search fields..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-background border-border text-foreground"
+                />
+              </div>
+
               {/* Basic Operations */}
               <div className="p-3 border rounded-lg bg-muted/20 border-border">
                 <h4 className="font-medium mb-2 text-foreground">Basic Operations</h4>
@@ -237,9 +382,31 @@ export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCa
                 </div>
               </div>
 
-              {/* Search & Relation Configuration */}
+              {/* Search Configuration */}
               <div className="p-3 border rounded-lg bg-muted/20 border-border">
-                <h4 className="font-medium mb-2 text-foreground">Search & Relation Configuration</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-foreground">Search Configuration</h4>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={selectAllSearchable}
+                      className="h-6 px-2 text-xs bg-background border-border hover:bg-accent text-foreground"
+                    >
+                      <CheckSquare className="w-3 h-3 mr-1" />
+                      All
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={deselectAllSearchable}
+                      className="h-6 px-2 text-xs bg-background border-border hover:bg-accent text-foreground"
+                    >
+                      <Square className="w-3 h-3 mr-1" />
+                      None
+                    </Button>
+                  </div>
+                </div>
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span className="text-foreground">Enable Search</span>
                   <input
@@ -274,59 +441,123 @@ export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCa
                     className="rounded border-border"
                   />
                 </div>
+                
+                {/* Searchable Fields Table */}
+                <div className="mb-4">
+                  <h5 className="text-sm font-medium text-foreground mb-2">Searchable Fields</h5>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="text-left text-muted-foreground">
+                        <tr>
+                          <th className="py-1">Field</th>
+                          <th className="py-1">Type</th>
+                          <th className="py-1">Searchable</th>
+                          <th className="py-1">Excluded</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredFields.filter(f => f.type === 'String').map((f) => {
+                          const searchables = new Set(config.searchConfig.searchableFields)
+                          const excluded = new Set(config.searchConfig.excludedFields)
+                          return (
+                            <tr key={f.name} className="border-t border-border/50">
+                              <td className="py-1 pr-1 font-mono text-foreground">{f.name}</td>
+                              <td className="py-1 pr-1 text-muted-foreground">{f.type}</td>
+                              <td className="py-1">
+                                <input
+                                  type="checkbox"
+                                  checked={searchables.has(f.name)}
+                                  onChange={(e) =>
+                                    updateFieldConfig(f.name, {
+                                      search: { searchable: e.target.checked },
+                                    })
+                                  }
+                                  className="rounded border-border"
+                                />
+                              </td>
+                              <td className="py-1">
+                                <input
+                                  type="checkbox"
+                                  checked={excluded.has(f.name)}
+                                  onChange={(e) =>
+                                    updateFieldConfig(f.name, {
+                                      search: { excluded: e.target.checked },
+                                    })
+                                  }
+                                  className="rounded border-border"
+                                />
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Relation Configuration */}
+              <div className="p-3 border rounded-lg bg-muted/20 border-border">
+                <h4 className="font-medium mb-3 text-foreground">Relation Configuration</h4>
+                
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead className="text-left text-muted-foreground">
                       <tr>
                         <th className="py-1">Field</th>
                         <th className="py-1">Type</th>
-                        <th className="py-1">Searchable</th>
-                        <th className="py-1">Excluded</th>
                         <th className="py-1">Include</th>
-                        <th className="py-1">Exclude</th>
                         <th className="py-1">Child</th>
+                        <th className="py-1">Exclude</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {model.fields.map((f) => {
-                        const searchables = new Set(config.searchConfig.searchableFields)
-                        const excluded = new Set(config.searchConfig.excludedFields)
+                      {/* Bulk Selection Rows */}
+                      <tr className="border-t border-border/50 bg-muted/30">
+                        <td className="py-1 pr-1 font-medium text-foreground">All Include</td>
+                        <td className="py-1 pr-1 text-muted-foreground">-</td>
+                        <td className="py-1">
+                          <input
+                            type="checkbox"
+                            checked={relationFields.length > 0 && relationFields.every(f => 
+                              new Set(config.relationConfig.includeFields).has(f.name)
+                            )}
+                            onChange={(e) => e.target.checked ? selectAllInclude() : deselectAllInclude()}
+                            className="rounded border-border"
+                          />
+                        </td>
+                        <td className="py-1"><input
+                            type="checkbox"
+                            checked={relationFields.length > 0 && relationFields.every(f => 
+                              new Set(config.relationConfig.childFields).has(f.name)
+                            )}
+                            onChange={(e) => e.target.checked ? selectAllChild() : deselectAllChild()}
+                            className="rounded border-border"
+                          /></td>
+                        <td className="py-1"><input
+                            type="checkbox"
+                            checked={relationFields.length > 0 && relationFields.every(f => 
+                              new Set(config.relationConfig.excludeFields).has(f.name)
+                            )}
+                            onChange={(e) => e.target.checked ? selectAllExclude() : deselectAllExclude()}
+                            className="rounded border-border"
+                          /></td>
+                      </tr>
+                      
+                      
+                      {/* Individual Field Rows */}
+                      {filteredFields.filter(f => 
+                        (!['String', 'Int', 'Float', 'Boolean', 'DateTime'].includes(f.type)) || 
+                        f.type.includes('[]') || 
+                        f.type.includes('?')
+                      ).map((f) => {
                         const includeSet = new Set(config.relationConfig.includeFields)
                         const excludeSet = new Set(config.relationConfig.excludeFields)
                         const childSet = new Set(config.relationConfig.childFields)
-                        const isStringField = f.type === 'String'
-                        const isRelationField = (!['String', 'Int', 'Float', 'Boolean', 'DateTime'].includes(f.type)) || f.type.includes('[]') || f.type.includes('?')
-
                         return (
                           <tr key={f.name} className="border-t border-border/50">
                             <td className="py-1 pr-1 font-mono text-foreground">{f.name}</td>
                             <td className="py-1 pr-1 text-muted-foreground">{f.type}</td>
-                            <td className="py-1">
-                              <input
-                                type="checkbox"
-                                checked={searchables.has(f.name)}
-                                onChange={(e) =>
-                                  updateFieldConfig(f.name, {
-                                    search: { searchable: e.target.checked },
-                                  })
-                                }
-                                disabled={!isStringField}
-                                className={`rounded border-border ${!isStringField ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              />
-                            </td>
-                            <td className="py-1">
-                              <input
-                                type="checkbox"
-                                checked={excluded.has(f.name)}
-                                onChange={(e) =>
-                                  updateFieldConfig(f.name, {
-                                    search: { excluded: e.target.checked },
-                                  })
-                                }
-                                disabled={!isStringField}
-                                className={`rounded border-border ${!isStringField ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              />
-                            </td>
                             <td className="py-1">
                               <input
                                 type="checkbox"
@@ -336,21 +567,7 @@ export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCa
                                     relation: { include: e.target.checked },
                                   })
                                 }
-                                disabled={!isRelationField}
-                                className={`rounded border-border ${!isRelationField ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              />
-                            </td>
-                            <td className="py-1">
-                              <input
-                                type="checkbox"
-                                checked={excludeSet.has(f.name)}
-                                onChange={(e) =>
-                                  updateFieldConfig(f.name, {
-                                    relation: { exclude: e.target.checked },
-                                  })
-                                }
-                                disabled={!isRelationField}
-                                className={`rounded border-border ${!isRelationField ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className="rounded border-border"
                               />
                             </td>
                             <td className="py-1">
@@ -362,8 +579,19 @@ export function ModelConfigCard({ model, config, onConfigChange }: ModelConfigCa
                                     relation: { child: e.target.checked },
                                   })
                                 }
-                                disabled={!isRelationField}
-                                className={`rounded border-border ${!isRelationField ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className="rounded border-border"
+                              />
+                            </td>
+                            <td className="py-1">
+                              <input
+                                type="checkbox"
+                                checked={excludeSet.has(f.name)}
+                                onChange={(e) =>
+                                  updateFieldConfig(f.name, {
+                                    relation: { exclude: e.target.checked },
+                                  })
+                                }
+                                className="rounded border-border"
                               />
                             </td>
                           </tr>
