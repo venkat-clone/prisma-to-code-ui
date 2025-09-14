@@ -13,7 +13,7 @@ export default function PrismaGenerator() {
   const { state, refs, actions } = usePrismaGenerator()
   const { step, prismaSchema, parsedSchema, isLoading, error, downloadUrl } = state
   const { fileInputRef } = refs
-  const { setPrismaSchema, handleFileUpload, handleSchemaUpload, updateModelConfig, handleGenerate, resetFlow } = actions
+  const { setPrismaSchema, handleFileUpload, handleSchemaUpload, updateModelConfig, addModelToConfig, removeModelFromConfig, handleGenerate, resetFlow } = actions
 
   const loadDemoConfig = async () => {
     try {
@@ -58,6 +58,8 @@ export default function PrismaGenerator() {
             parsedSchema={parsedSchema}
             isLoading={isLoading}
             updateModelConfig={updateModelConfig}
+            addModelToConfig={addModelToConfig}
+            removeModelFromConfig={removeModelFromConfig}
             handleGenerate={handleGenerate}
             resetFlow={resetFlow}
           />

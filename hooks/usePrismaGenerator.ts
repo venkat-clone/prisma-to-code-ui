@@ -49,41 +49,8 @@ export function usePrismaGenerator() {
         try {
             const data = await parseSchemaApi(prismaSchema)
 
+            // Start with empty config - models will be added when user selects them
             const defaultConfig: Record<string, ModelConfig> = {}
-            data.models.forEach((model: SchemaModel) => {
-                // Get all string fields for default searchable configuration
-                const stringFields = model.fields
-                    .filter(field => field.type === 'String')
-                    .map(field => field.name)
-
-                defaultConfig[model.name] = {
-                    enableCreate: true,
-                    enableUpdate: true,
-                    enableGet: true,
-                    enableGetByRelation: true,
-                    enableGetByField: true,
-                    nestedCreateConfig: {
-                        enabled: true,
-                        maxNestingLevel: 2,
-                    },
-                    searchConfig: {
-                        enabled: true,
-                        includeRelationSearch: true,
-                        searchableFields: stringFields, // Default all string fields as searchable
-                        excludedFields: [],
-                    },
-                    relationConfig: {
-                        enabled: true,
-                        includeFields: [],
-                        excludeFields: [],
-                        childFields: [],
-                    },
-                    importConfig: {
-                        enabled: false,
-                        importModels: [],
-                    },
-                }
-            })
 
             setParsedSchema({ schema: data, config: defaultConfig })
             setStep("configure")
@@ -93,6 +60,126 @@ export function usePrismaGenerator() {
         } finally {
             setIsLoading(false)
         }
+    }
+
+    const createDefaultModelConfig = (modelName: string): ModelConfig => {
+        if (!parsedSchema) {
+            return {
+                enableCreate: true,
+                enableUpdate: true,
+                enableGet: true,
+                enableGetByRelation: true,
+                enableGetByField: true,
+                nestedCreateConfig: {
+                    enabled: true,
+                    maxNestingLevel: 2,
+                },
+                searchConfig: {
+                    enabled: true,
+                    includeRelationSearch: true,
+                    searchableFields: [],
+                    excludedFields: [],
+                },
+                relationConfig: {
+                    enabled: true,
+                    includeFields: [],
+                    excludeFields: [],
+                    childFields: [],
+                },
+                importConfig: {
+                    enabled: false,
+                    importModels: [],
+                },
+            }
+        }
+
+        const model = parsedSchema.schema.models.find(m => m.name === modelName)
+        if (!model) {
+            return {
+                enableCreate: true,
+                enableUpdate: true,
+                enableGet: true,
+                enableGetByRelation: true,
+                enableGetByField: true,
+                nestedCreateConfig: {
+                    enabled: true,
+                    maxNestingLevel: 2,
+                },
+                searchConfig: {
+                    enabled: true,
+                    includeRelationSearch: true,
+                    searchableFields: [],
+                    excludedFields: [],
+                },
+                relationConfig: {
+                    enabled: true,
+                    includeFields: [],
+                    excludeFields: [],
+                    childFields: [],
+                },
+                importConfig: {
+                    enabled: false,
+                    importModels: [],
+                },
+            }
+        }
+
+        // Get all string fields for default searchable configuration
+        const stringFields = model.fields
+            .filter(field => field.type === 'String')
+            .map(field => field.name)
+
+        return {
+            enableCreate: true,
+            enableUpdate: true,
+            enableGet: true,
+            enableGetByRelation: true,
+            enableGetByField: true,
+            nestedCreateConfig: {
+                enabled: true,
+                maxNestingLevel: 2,
+            },
+            searchConfig: {
+                enabled: true,
+                includeRelationSearch: true,
+                searchableFields: stringFields, // Default all string fields as searchable
+                excludedFields: [],
+            },
+            relationConfig: {
+                enabled: true,
+                includeFields: [],
+                excludeFields: [],
+                childFields: [],
+            },
+            importConfig: {
+                enabled: false,
+                importModels: [],
+            },
+        }
+    }
+
+    const addModelToConfig = (modelName: string) => {
+        if (!parsedSchema) return
+        if (parsedSchema.config[modelName]) return // Already exists
+
+        const defaultConfig = createDefaultModelConfig(modelName)
+        setParsedSchema({
+            ...parsedSchema,
+            config: {
+                ...parsedSchema.config,
+                [modelName]: defaultConfig,
+            },
+        })
+    }
+
+    const removeModelFromConfig = (modelName: string) => {
+        if (!parsedSchema) return
+        const newConfig = { ...parsedSchema.config }
+        delete newConfig[modelName]
+        setParsedSchema({
+            ...parsedSchema,
+            config: newConfig,
+        })
     }
 
     const updateModelConfig = (modelName: string, updates: Partial<ModelConfig>) => {
@@ -157,6 +244,8 @@ export function usePrismaGenerator() {
             setPrismaSchema,
             handleFileUpload,
             handleSchemaUpload,
+            addModelToConfig,
+            removeModelFromConfig,
             updateModelConfig,
             handleGenerate,
             resetFlow,
